@@ -43,3 +43,10 @@ Real website:
 ### Future plans:
 
 - [ ] 
+
+---
+Our team:
+- name (github repo)
+- name (github repo)
+- name (github repo)
+- name (github repo)
