@@ -30,6 +30,7 @@ Real website:
 - [x] Node Js (Backend) 
 - [x] Express (API Calls)
 - [x] postgresql (Databse)
+- [x] Angular TS (Frontend) 
 - [x] Trelllo (Managment for the work)
 - [x] lucidchart (ERD for the database)
 
