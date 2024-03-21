@@ -44,9 +44,7 @@ TalentSphere is a comprehensive HR Management System web application designed to
 
 ## Screenshots:
 
-### ERD:
 
-![alt text](image.png)
 
 ### Hierarchy Diagram:
 
