@@ -36,18 +36,16 @@ app.get('/users', function (req, res) {
             return res.send({ error: false, data: results, message: 'users list.' });
       });
 });
+app.get('/employee', function (req, res) {
+      dbConn.query('SELECT * FROM employee', function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results, message: 'users list.' });
+      });
+});
 
 app.listen(3000, function () {
     console.log('Node app is running on port 3000');
 });
 
 module.exports = app;
-
-
-
-
-
-
-
-
 
