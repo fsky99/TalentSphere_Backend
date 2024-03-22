@@ -61,6 +61,26 @@ app.get('/empleave', function (req, res) {
             return res.send({ error: false, data: results, message: 'users list.' });
       });
 });
+app.get('/employeejobinfo', function (req, res) {
+      dbConn.query('SELECT * FROM employeejobinfo', function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results, message: 'users list.' });
+      });
+});
+app.get('/timeSheet', function (req, res) {
+      dbConn.query('SELECT * FROM timeSheet', function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results, message: 'users list.' });
+      });
+});
+
+app.get('/bonus', function (req, res) {
+      dbConn.query('SELECT * FROM bonus', function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results, message: 'users list.' });
+      });
+});
+
 
 
 
