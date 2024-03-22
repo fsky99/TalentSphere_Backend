@@ -114,8 +114,8 @@ app.get("/eventss", function (req, res) {
       dbConn.query('SELECT * FROM users where id=?', id, function (error, results, fields) {
             if (error) throw error;
             return res.send({ error: false, data: results[0], message: 'users list.' });
+             });
       });
-});
       app.get('/employee/:userID', function (req, res) {
             let userID = req.params.id;
             if (!userID) {
@@ -127,6 +127,18 @@ app.get("/eventss", function (req, res) {
             });
       });
     
+// delete request 
+      app.delete('/deleteUser', function (req, res) {
+            const { id } = req.query;
+      
+            if (!id) {
+            return res.status(400).send({ error: true, message: 'Please provide user_id' });
+            }
+            dbConn.query('DELETE FROM users WHERE id = ?', [id], function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results, message: 'User has been updated successfully.' });
+            });
+      });
 
 app.listen(3000, function () {
   console.log("Node app is running on port 3000")
