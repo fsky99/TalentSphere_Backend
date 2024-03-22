@@ -32,11 +32,13 @@ app.use(function (req, res, next) {
   )
   next()
 })
+//get requests
 app.get("/users", function (req, res) {
   dbConn.query("SELECT * FROM users", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
+
 })
 app.get("/employee", function (req, res) {
   dbConn.query("SELECT * FROM employee", function (error, results, fields) {
@@ -104,6 +106,26 @@ app.get("/eventss", function (req, res) {
         return res.send({ error: false, data: results, message: "users list." })
       })
     })
+    app.get('/users/:id', function (req, res) {
+      let UserID = req.params.id;
+      if (!UserID) {
+            return res.status(400).send({ error: true, message: 'Please provide UserID' });
+      }
+      dbConn.query('SELECT * FROM users where id=?', id, function (error, results, fields) {
+            if (error) throw error;
+            return res.send({ error: false, data: results[0], message: 'users list.' });
+      });
+});
+      app.get('/employee/:userID', function (req, res) {
+            let userID = req.params.id;
+            if (!userID) {
+                  return res.status(400).send({ error: true, message: 'Please provide userID' });
+            }
+            dbConn.query('SELECT * FROM employee where userID=?', userID, function (error, results, fields) {
+                  if (error) throw error;
+                  return res.send({ error: false, data: results[0], message: 'users list.' });
+            });
+      });
     
 
 app.listen(3000, function () {
