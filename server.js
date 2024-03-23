@@ -615,21 +615,112 @@ app.put("/updateUser", function (req, res) {
     });
 
 
-
-
-
-
-
-
-
-
-
-
-
+app.put("/updateTimeSheet", function (req, res) {
+      const userID = req.body.userID;
+      const checkinTime = req.body.checkinTime;
+      const checkoutTime = req.body.checkoutTime;
+      const projectName = req.body.projectName;
+      const taskName = req.body.taskName;
+      const status = req.body.status;
+    
+      if (!userID || !checkinTime || !checkoutTime || !projectName || !taskName || !status) {
+        return res.status(400).send({
+          error: true,
+          message: "Please provide all required timeSheet details"
+        });
+      }
+    
+      dbConn.query(
+        "UPDATE timeSheet SET checkinTime = ?, checkoutTime = ?, projectName = ?, taskName = ?, status = ? WHERE userID = ?",
+        [checkinTime, checkoutTime, projectName, taskName, status, userID],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({
+              error: true,
+              message: "Error updating timeSheet in the database"
+            });
+          }
+          return res.send({
+            error: false,
+            data: results,
+            message: "timeSheet record has been updated successfully."
+          });
+        }
+      );
+    });
+    
+    app.put("/updateEmployeeJobInfo", function (req, res) {
+      const userID = req.body.userID;
+      const jobName = req.body.jobName;
+      const joiningDate = req.body.joiningDate;
+      const cv = req.body.cv;
+      const passport = req.body.passport;
+      const healthCheck = req.body.healthCheck;
+      const visa = req.body.visa;
+      const jobContract = req.body.jobContract;
+      const reportsTo = req.body.reportsTo;
+    
+      if (!userID || !jobName || !joiningDate || !cv || !passport || !healthCheck || !visa || !jobContract || !reportsTo) {
+        return res.status(400).send({
+          error: true,
+          message: "Please provide all required employeejobinfo details"
+        });
+      }
+    
+      dbConn.query(
+        "UPDATE employeejobinfo SET jobName = ?, joiningDate = ?, cv = ?, passport = ?, healthCheck = ?, visa = ?, jobContract = ?, reportsTo = ? WHERE userID = ?",
+        [jobName, joiningDate, cv, passport, healthCheck, visa, jobContract, reportsTo, userID],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({
+              error: true,
+              message: "Error updating employeejobinfo in the database"
+            });
+          }
+          return res.send({
+            error: false,
+            data: results,
+            message: "employeejobinfo record has been updated successfully."
+          });
+        }
+      );
+    });
+    
+    app.put("/updateEmpleave", function (req, res) {
+      const userID = req.body.userID;
+      const date = req.body.date;
+      const status = req.body.status;
+    
+      if (!userID || !date || !status) {
+        return res.status(400).send({
+          error: true,
+          message: "Please provide all required empleave details"
+        });
+      }
+    
+      dbConn.query(
+        "UPDATE empleave SET date = ?, status = ? WHERE userID = ?",
+        [date, status, userID],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({
+              error: true,
+              message: "Error updating empleave in the database"
+            });
+          }
+          return res.send({
+            error: false,
+            data: results,
+            message: "empleave record has been updated successfully."
+          });
+        }
+      );
+    });
+    
     
 // delete request
-app.delete("/deleteUser", function (req, res) {
-  const { id } = req.query
+app.delete("/deleteUser/:id", function (req, res) {
+  let id = req.params.id
 
   if (!id) {
     return res
