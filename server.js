@@ -522,6 +522,61 @@ app.post("/addDirectMessage", function (req, res) {
         }
       );
     });
+
+
+// update request
+
+app.put("/updateUser", function (req, res) {
+      const {
+            id,
+            fname,
+            lname,
+            username,
+            email,
+            password,
+            type,
+            dob,
+            phoneno,
+            country,
+            address,
+            gender,
+            picture,
+          } = req.body
+      
+    
+      if (!id) {
+        return res.status(400).send({ error: true, message: "Please provide user ID" });
+      }
+    
+      dbConn.query(
+        "UPDATE users SET fname = ?, lname = ?, username = ?, email = ?, password = ?, type = ?, dob = ?, phoneno = ?, country = ?, address = ?, gender = ?, picture = ? WHERE id = ?",
+        [fname, lname, username, email, password, type, dob, phoneno, country, address, gender, picture, id],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({ error: true, message: "Error updating user in the database" });
+          }
+          return res.send({ error: false, data: results, message: "User has been updated successfully." });
+        }
+      );
+    });
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 // delete request
 app.delete("/deleteUser", function (req, res) {
