@@ -2,6 +2,7 @@ var express = require("express")
 var app = express()
 var cors = require("cors")
 var mysql = require("mysql")
+var bcrypt = require("bcrypt")
 app.use(cors({ origin: "http://localhost:3306" }))
 var bodyParser = require("body-parser")
 
@@ -38,7 +39,6 @@ app.get("/users", function (req, res) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
-
 })
 app.get("/employee", function (req, res) {
   dbConn.query("SELECT * FROM employee", function (error, results, fields) {
@@ -101,44 +101,274 @@ app.get("/salary", function (req, res) {
   })
 })
 app.get("/eventss", function (req, res) {
-      dbConn.query("SELECT * FROM eventss", function (error, results, fields) {
-        if (error) throw error
-        return res.send({ error: false, data: results, message: "users list." })
+  dbConn.query("SELECT * FROM eventss", function (error, results, fields) {
+    if (error) throw error
+    return res.send({ error: false, data: results, message: "users list." })
+  })
+})
+app.get("/users/:id", function (req, res) {
+  let id = req.params.id
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide UserID" })
+  }
+  dbConn.query(
+    "SELECT * FROM users where id=?",
+    id,
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results[0],
+        message: "users list.",
       })
-    })
-    app.get('/users/:id', function (req, res) {
-      let UserID = req.params.id;
-      if (!UserID) {
-            return res.status(400).send({ error: true, message: 'Please provide UserID' });
+    }
+  )
+})
+app.get("/employee/:userID", function (req, res) {
+  let userID = req.params.userID
+  if (!userID) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide userID" })
+  }
+  dbConn.query(
+    "SELECT * FROM employee where userID=?",
+    userID,
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results[0],
+        message: "users list.",
+      })
+    }
+  )
+})
+
+// insert req
+app.post("/addUser", function (req, res) {
+  const {
+    id,
+    fname,
+    lname,
+    username,
+    email,
+    password,
+    type,
+    dob,
+    phoneno,
+    country,
+    address,
+    gender,
+    picture,
+  } = req.body
+
+  if (
+    !id ||
+    !fname ||
+    !lname ||
+    !username ||
+    !email ||
+    !password ||
+    !type ||
+    !dob ||
+    !phoneno ||
+    !country ||
+    !address ||
+    !gender
+  ) {
+    return res
+      .status(400)
+      .send({
+        error: true,
+        message: "Please provide all required user details",
+      })
+  }
+
+  // Hash the password before inserting it into the database
+  // For example, using bcrypt
+  bcrypt.hash(password, 10, function (err, hashedPassword) {
+    if (err) {
+      return res
+        .status(500)
+        .send({ error: true, message: "Error hashing password" })
+    }
+
+    dbConn.query(
+      "INSERT INTO users SET ?",
+      {
+        id,
+        fname,
+        lname,
+        username,
+        email,
+        password: hashedPassword,
+        type,
+        dob,
+        phoneno,
+        country,
+        address,
+        gender,
+        picture,
+      },
+      function (error, results, fields) {
+        if (error) {
+          return res
+            .status(500)
+            .send({
+              error: true,
+              message: "Error inserting user into database",
+            })
+        }
+        return res.send({
+          error: false,
+          data: results,
+          message: "New user has been created successfully.",
+        })
       }
-      dbConn.query('SELECT * FROM users where id=?', id, function (error, results, fields) {
-            if (error) throw error;
-            return res.send({ error: false, data: results[0], message: 'users list.' });
-             });
-      });
-      app.get('/employee/:userID', function (req, res) {
-            let userID = req.params.id;
-            if (!userID) {
-                  return res.status(400).send({ error: true, message: 'Please provide userID' });
-            }
-            dbConn.query('SELECT * FROM employee where userID=?', userID, function (error, results, fields) {
-                  if (error) throw error;
-                  return res.send({ error: false, data: results[0], message: 'users list.' });
-            });
-      });
+    )
+  })
+})
+
+app.post("/addEvent", function (req, res) {
+  const { userID, eventName, eventDate, eventTime, picture } = req.body
+
+  if (!userID || !eventName || !eventDate || !eventTime) {
+    return res
+      .status(400)
+      .send({
+        error: true,
+        message: "Please provide all required event details",
+      })
+  }
+
+  dbConn.query(
+    "INSERT INTO eventss (userID, eventName, eventDate, eventTime, picture) VALUES (?, ?, ?, ?, ?)",
+    [userID, eventName, eventDate, eventTime, picture],
+    function (error, results, fields) {
+      if (error) {
+        return res
+          .status(500)
+          .send({ error: true, message: "Error inserting event into database" })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "New event has been created successfully.",
+      })
+    }
+  )
+})
+
+app.post("/addSalary", function (req, res) {
+  const { userID, salary } = req.body
+
+  if (!userID || !salary) {
+    return res
+      .status(400)
+      .send({
+        error: true,
+        message: "Please provide all required salary details",
+      })
+  }
+
+  dbConn.query(
+    "INSERT INTO salary (userID, salary) VALUES (?, ?)",
+    [userID, salary],
+    function (error, results, fields) {
+      if (error) {
+        return res
+          .status(500)
+          .send({
+            error: true,
+            message: "Error inserting salary into database",
+          })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "New salary record has been created successfully.",
+      })
+    }
+  )
+})
+
+app.post("/addBonus", function (req, res) {
+  const { userID, salaryID, bonus, bonusDate } = req.body
+
+  if (!userID || !salaryID || !bonus || !bonusDate) {
+    return res
+      .status(400)
+      .send({
+        error: true,
+        message: "Please provide all required bonus details",
+      })
+  }
+
+  dbConn.query(
+    "INSERT INTO bonus (userID, salaryID, bonus, bonusDate) VALUES (?, ?, ?, ?)",
+    [userID, salaryID, bonus, bonusDate],
+    function (error, results, fields) {
+      if (error) {
+        return res
+          .status(500)
+          .send({ error: true, message: "Error inserting bonus into database" })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "New bonus record has been created successfully.",
+      })
+    }
+  )
+})
+app.post("/addEmployee", function (req, res) {
+      const { userID, emprank, reports_to, job_id, department, account_no } = req.body;
     
-// delete request 
-      app.delete('/deleteUser', function (req, res) {
-            const { id } = req.query;
-      
-            if (!id) {
-            return res.status(400).send({ error: true, message: 'Please provide user_id' });
-            }
-            dbConn.query('DELETE FROM users WHERE id = ?', [id], function (error, results, fields) {
-            if (error) throw error;
-            return res.send({ error: false, data: results, message: 'User has been updated successfully.' });
-            });
-      });
+      if (!userID || !emprank || !job_id || !department) {
+        return res.status(400).send({ error: true, message: "Please provide all required employee details" });
+      }
+    
+      dbConn.query(
+        "INSERT INTO employee (userID, emprank, reports_to, job_id, department, account_no) VALUES (?, ?, ?, ?, ?, ?)",
+        [userID, emprank, reports_to, job_id, department, account_no],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({ error: true, message: "Error inserting employee into database" });
+          }
+          return res.send({
+            error: false,
+            data: results,
+            message: "New employee record has been created successfully.",
+          });
+        }
+      );
+    });
+    
+// delete request
+app.delete("/deleteUser", function (req, res) {
+  const { id } = req.query
+
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide user_id" })
+  }
+  dbConn.query(
+    "DELETE FROM users WHERE id = ?",
+    [id],
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results,
+        message: "User has been updated successfully.",
+      })
+    }
+  )
+})
 
 app.listen(3000, function () {
   console.log("Node app is running on port 3000")
