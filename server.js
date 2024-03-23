@@ -561,9 +561,58 @@ app.put("/updateUser", function (req, res) {
     });
     
 
+    app.put("/updateSalary", function (req, res) {
+      const {
+            id,
+            userID,
+            salary
+          } = req.body
+      
+    
+      if (!id) {
+        return res.status(400).send({ error: true, message: "Please provide user ID" });
+      }
+    
+      dbConn.query(
+        "UPDATE salary SET salary = ? WHERE userID = ?",
+        [salary,userID],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({ error: true, message: "Error updating user salary in the database" });
+          }
+          return res.send({ error: false, data: results, message: "User salary has been updated successfully." });
+        }
+      );
+    });
+    
 
-
-
+    app.put("/updateEmployee", function (req, res) {
+      const {
+            id,
+            userID,
+            emprank,
+            reports_to,
+            job_id ,
+            department,
+            account_no
+          } = req.body
+      
+    
+      if (!id) {
+        return res.status(400).send({ error: true, message: "Please provide user ID" });
+      }
+    
+      dbConn.query(
+        "UPDATE employee SET emprank = ? , reports_to = ? , job_id = ? ,department = ? , account_no = ? WHERE userID = ?",
+        [emprank ,reports_to, job_id ,department , account_no,userID],
+        function (error, results, fields) {
+          if (error) {
+            return res.status(500).send({ error: true, message: "Error updating user salary in the database" });
+          }
+          return res.send({ error: false, data: results, message: "User salary has been updated successfully." });
+        }
+      );
+    });
 
 
 
