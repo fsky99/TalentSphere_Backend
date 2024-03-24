@@ -231,7 +231,7 @@ app.post("/addUser", verifyToken,function (req, res) {
     )
   })
 })
-app.post("/users/login", verifyToken,function (req, res) {
+app.post("/users/login",function (req, res) {
   var { email, password  } = req.body
   dbConn.query(
     "SELECT id, type, password FROM users WHERE email = ? ",
