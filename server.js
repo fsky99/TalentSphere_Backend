@@ -3,9 +3,9 @@ var app = express()
 var cors = require("cors")
 var mysql = require("mysql")
 var bcrypt = require("bcrypt")
-app.use(cors({ origin: "http://localhost:3306" }))
-var bodyParser = require("body-parser")
 
+var bodyParser = require("body-parser")
+app.use(cors({ origin: "http://localhost:3306" }))
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({
@@ -185,12 +185,12 @@ app.post("/addUser", function (req, res) {
     })
   }
 
-  // bcrypt.hash(password, 10, function (err, hashedPassword) {
-  //   if (err) {
-  //     return res
-  //       .status(500)
-  //       .send({ error: true, message: "Error hashing password" })
-  //   }
+  bcrypt.hash(password, 10, function (err, hashedPassword) {
+    if (err) {
+      return res
+        .status(500)
+        .send({ error: true, message: "Error hashing password" })
+    }
 
     dbConn.query(
       "INSERT INTO users SET ?",
@@ -222,10 +222,33 @@ app.post("/addUser", function (req, res) {
           message: "New user has been created successfully.",
         })
       }
-    
+    )}
   )
 })
+app.post ('/users/login', function(req,res){
+  var {email, password}= req.body
+  dbConn.query('SELECT * FROM users WHERE email = ? ' , [email], async function(error, result , fields){
+    if (error){
+      res.send({
+        failed : "error",
+        error : error
+      })
+    }else{
+      if (results.length != 0) {
+        const comparison = await bcrypt.compare(password, results[0].password);
+        if (comparison) {
+              res.send({ success: "login successful" });
+        } else {
+              res.send({ error: "Email and password does not match" });
+        }
+  }
+  else {
+        res.send({ error: "Email does not exist" });
+  }
+    }
+  })
 
+}) 
 app.post("/addEvent", function (req, res) {
   const { userID, eventName, eventDate, eventTime, picture } = req.body
 
