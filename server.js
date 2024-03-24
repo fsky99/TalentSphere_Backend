@@ -232,9 +232,9 @@ app.post("/addUser", function (req, res) {
   })
 })
 app.post("/users/login", function (req, res) {
-  var { email, password ,type , id } = req.body
+  var { email, password  } = req.body
   dbConn.query(
-    "SELECT * FROM users WHERE email = ? ",
+    "SELECT id, type, password FROM users WHERE email = ? ",
     [email],
     async function (error, results, fields) {
       if (error) {
@@ -244,6 +244,7 @@ app.post("/users/login", function (req, res) {
         })
       } else {
         if (results.length != 0) {
+          const {id , type} = results[0]
           const comparison = await bcrypt.compare(password, results[0].password)
           if (comparison) {
             const token = jwt.sign({email: email}, JWT_SECRET ,{
