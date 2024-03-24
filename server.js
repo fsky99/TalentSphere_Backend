@@ -3,6 +3,8 @@ var app = express()
 var cors = require("cors")
 var mysql = require("mysql")
 var bcrypt = require("bcrypt")
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 var bodyParser = require("body-parser")
 app.use(bodyParser.json())
@@ -12,7 +14,7 @@ app.use(
   })
 )
 app.use(cors({ origin: "http://localhost:4200" }))
-
+const JWT_SECRET = process.env.JWT_SECRET
 // default route
 app.get("/", function (req, res) {
   return res.send({ error: true, message: "hello" })
@@ -38,7 +40,7 @@ app.use(function (req, res, next) {
   next()
 })
 //get requests
-app.get("/users", function (req, res) {
+app.get("/users",verifyToken, function (req, res) {
   dbConn.query("SELECT * FROM users", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
@@ -50,7 +52,7 @@ app.get("/employee", function (req, res) {
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
-app.get("/DirectMessages", function (req, res) {
+app.get("/DirectMessages", verifyToken,function (req, res) {
   dbConn.query(
     "SELECT * FROM DirectMessages",
     function (error, results, fields) {
@@ -59,7 +61,7 @@ app.get("/DirectMessages", function (req, res) {
     }
   )
 })
-app.get("/anonymousMessages", function (req, res) {
+app.get("/anonymousMessages", verifyToken,function (req, res) {
   dbConn.query(
     "SELECT * FROM anonymousMessages",
     function (error, results, fields) {
@@ -69,13 +71,13 @@ app.get("/anonymousMessages", function (req, res) {
   )
 })
 
-app.get("/empleave", function (req, res) {
+app.get("/empleave", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM empleave", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
-app.get("/employeejobinfo", function (req, res) {
+app.get("/employeejobinfo",verifyToken, function (req, res) {
   dbConn.query(
     "SELECT * FROM employeejobinfo",
     function (error, results, fields) {
@@ -84,33 +86,33 @@ app.get("/employeejobinfo", function (req, res) {
     }
   )
 })
-app.get("/timeSheet", function (req, res) {
+app.get("/timeSheet", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM timeSheet", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
 
-app.get("/bonus", function (req, res) {
+app.get("/bonus", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM bonus", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
 
-app.get("/salary", function (req, res) {
+app.get("/salary", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM salary", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
-app.get("/eventss", function (req, res) {
+app.get("/eventss", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM eventss", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
-app.get("/users/:id", function (req, res) {
+app.get("/users/:id", verifyToken,function (req, res) {
   let id = req.params.id
   if (!id) {
     return res
@@ -130,7 +132,7 @@ app.get("/users/:id", function (req, res) {
     }
   )
 })
-app.get("/employee/:userID", function (req, res) {
+app.get("/employee/:userID", verifyToken,function (req, res) {
   let userID = req.params.userID
   if (!userID) {
     return res
@@ -152,7 +154,7 @@ app.get("/employee/:userID", function (req, res) {
 })
 
 // insert req
-app.post("/addUser", function (req, res) {
+app.post("/addUser", verifyToken,function (req, res) {
   const {
     id,
     fname,
@@ -229,10 +231,10 @@ app.post("/addUser", function (req, res) {
     )
   })
 })
-app.post("/users/login", function (req, res) {
-  var { email, password } = req.body
+app.post("/users/login", verifyToken,function (req, res) {
+  var { email, password  } = req.body
   dbConn.query(
-    "SELECT * FROM users WHERE email = ? ",
+    "SELECT id, type, password FROM users WHERE email = ? ",
     [email],
     async function (error, results, fields) {
       if (error) {
@@ -242,9 +244,13 @@ app.post("/users/login", function (req, res) {
         })
       } else {
         if (results.length != 0) {
+          const {id , type} = results[0]
           const comparison = await bcrypt.compare(password, results[0].password)
           if (comparison) {
-            res.send({ success: "login successful", email })
+            const token = jwt.sign({email: email}, JWT_SECRET ,{
+              expiresIn:'1h',
+            })
+            res.send({ success: "login successful", token ,email ,type , id})
           } else {
             res.send({ error: "Email and password does not match" })
           }
@@ -255,7 +261,8 @@ app.post("/users/login", function (req, res) {
     }
   )
 })
-app.post("/addEvent", function (req, res) {
+
+app.post("/addEvent", verifyToken,function (req, res) {
   const { userID, eventName, eventDate, eventTime, picture } = req.body
 
   if (!userID || !eventName || !eventDate || !eventTime) {
@@ -283,7 +290,7 @@ app.post("/addEvent", function (req, res) {
   )
 })
 
-app.post("/addSalary", function (req, res) {
+app.post("/addSalary", verifyToken,function (req, res) {
   const { userID, salary } = req.body
 
   if (!userID || !salary) {
@@ -312,7 +319,7 @@ app.post("/addSalary", function (req, res) {
   )
 })
 
-app.post("/addBonus", function (req, res) {
+app.post("/addBonus",verifyToken, function (req, res) {
   const { userID, salaryID, bonus, bonusDate } = req.body
 
   if (!userID || !salaryID || !bonus || !bonusDate) {
@@ -339,7 +346,7 @@ app.post("/addBonus", function (req, res) {
     }
   )
 })
-app.post("/addEmployee", function (req, res) {
+app.post("/addEmployee",verifyToken, function (req, res) {
   const { userID, emprank, reports_to, job_id, department, account_no } =
     req.body
 
@@ -369,7 +376,7 @@ app.post("/addEmployee", function (req, res) {
   )
 })
 
-app.post("/addTimeSheet", function (req, res) {
+app.post("/addTimeSheet", verifyToken,function (req, res) {
   const { userID, checkinTime, checkoutTime, projectName, taskName, status } =
     req.body
 
@@ -406,7 +413,7 @@ app.post("/addTimeSheet", function (req, res) {
   )
 })
 
-app.post("/addEmployeeJobInfo", function (req, res) {
+app.post("/addEmployeeJobInfo", verifyToken,function (req, res) {
   const {
     userID,
     jobName,
@@ -464,7 +471,7 @@ app.post("/addEmployeeJobInfo", function (req, res) {
     }
   )
 })
-app.post("/addEmployeeLeave", function (req, res) {
+app.post("/addEmployeeLeave", verifyToken,function (req, res) {
   const { userID, date, status } = req.body
 
   if (!userID || !date || !status) {
@@ -493,7 +500,7 @@ app.post("/addEmployeeLeave", function (req, res) {
   )
 })
 
-app.post("/addAnonymousMessage", function (req, res) {
+app.post("/addAnonymousMessage", verifyToken,function (req, res) {
   const { RecieveID, title, message, attachments } = req.body
 
   if (!RecieveID || !title || !message) {
@@ -521,7 +528,7 @@ app.post("/addAnonymousMessage", function (req, res) {
     }
   )
 })
-app.post("/addDirectMessage", function (req, res) {
+app.post("/addDirectMessage",verifyToken, function (req, res) {
   const { senderID, RecieveID, title, message, attachments } = req.body
 
   if (!senderID || !RecieveID || !title || !message) {
@@ -552,7 +559,7 @@ app.post("/addDirectMessage", function (req, res) {
 
 // update request
 
-app.put("/updateUser", function (req, res) {
+app.put("/updateUser", verifyToken,function (req, res) {
   const {
     id,
     fname,
@@ -607,7 +614,7 @@ app.put("/updateUser", function (req, res) {
   )
 })
 
-app.put("/updateSalary", function (req, res) {
+app.put("/updateSalary", verifyToken,function (req, res) {
   const { id, userID, salary } = req.body
 
   if (!id) {
@@ -635,7 +642,7 @@ app.put("/updateSalary", function (req, res) {
   )
 })
 
-app.put("/updateEmployee", function (req, res) {
+app.put("/updateEmployee",verifyToken, function (req, res) {
   const { id, userID, emprank, reports_to, job_id, department, account_no } =
     req.body
 
@@ -664,7 +671,7 @@ app.put("/updateEmployee", function (req, res) {
   )
 })
 
-app.put("/updateTimeSheet", function (req, res) {
+app.put("/updateTimeSheet",verifyToken, function (req, res) {
   const userID = req.body.userID
   const checkinTime = req.body.checkinTime
   const checkoutTime = req.body.checkoutTime
@@ -705,7 +712,7 @@ app.put("/updateTimeSheet", function (req, res) {
   )
 })
 
-app.put("/updateEmployeeJobInfo", function (req, res) {
+app.put("/updateEmployeeJobInfo", verifyToken,function (req, res) {
   const userID = req.body.userID
   const jobName = req.body.jobName
   const joiningDate = req.body.joiningDate
@@ -762,7 +769,7 @@ app.put("/updateEmployeeJobInfo", function (req, res) {
   )
 })
 
-app.put("/updateEmpleave", function (req, res) {
+app.put("/updateEmpleave", verifyToken,function (req, res) {
   const userID = req.body.userID
   const date = req.body.date
   const status = req.body.status
@@ -794,7 +801,7 @@ app.put("/updateEmpleave", function (req, res) {
 })
 
 // delete request
-app.delete("/deleteUser/:id", function (req, res) {
+app.delete("/deleteUser/:id", verifyToken,function (req, res) {
   let id = req.params.id
 
   if (!id) {
@@ -815,6 +822,19 @@ app.delete("/deleteUser/:id", function (req, res) {
     }
   )
 })
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(403).json({ error: 'Token is required' });
+  }
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
 
 app.listen(3000, function () {
   console.log("Node app is running on port 3000")
