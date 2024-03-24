@@ -185,12 +185,12 @@ app.post("/addUser", function (req, res) {
     })
   }
 
-  bcrypt.hash(password, 10, function (err, hashedPassword) {
-    if (err) {
-      return res
-        .status(500)
-        .send({ error: true, message: "Error hashing password" })
-    }
+  // bcrypt.hash(password, 10, function (err, hashedPassword) {
+  //   if (err) {
+  //     return res
+  //       .status(500)
+  //       .send({ error: true, message: "Error hashing password" })
+  //   }
 
     dbConn.query(
       "INSERT INTO users SET ?",
@@ -200,7 +200,7 @@ app.post("/addUser", function (req, res) {
         lname,
         username,
         email,
-        password: hashedPassword,
+        password: password,
         type,
         dob,
         phoneno,
@@ -222,8 +222,8 @@ app.post("/addUser", function (req, res) {
           message: "New user has been created successfully.",
         })
       }
-    )
-  })
+    
+  )
 })
 
 app.post("/addEvent", function (req, res) {
