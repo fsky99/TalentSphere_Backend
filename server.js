@@ -3,6 +3,8 @@ var app = express()
 var cors = require("cors")
 var mysql = require("mysql")
 var bcrypt = require("bcrypt")
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 var bodyParser = require("body-parser")
 app.use(bodyParser.json())
@@ -12,7 +14,7 @@ app.use(
   })
 )
 app.use(cors({ origin: "http://localhost:4200" }))
-
+const JWT_SECRET = process.env.JWT_SECRET
 // default route
 app.get("/", function (req, res) {
   return res.send({ error: true, message: "hello" })
@@ -38,7 +40,7 @@ app.use(function (req, res, next) {
   next()
 })
 //get requests
-app.get("/users", function (req, res) {
+app.get("/users",verifyToken, function (req, res) {
   dbConn.query("SELECT * FROM users", function (error, results, fields) {
     if (error) throw error
     return res.send({ error: false, data: results, message: "users list." })
@@ -230,7 +232,7 @@ app.post("/addUser", function (req, res) {
   })
 })
 app.post("/users/login", function (req, res) {
-  var { email, password } = req.body
+  var { email, password ,type , id } = req.body
   dbConn.query(
     "SELECT * FROM users WHERE email = ? ",
     [email],
@@ -244,7 +246,10 @@ app.post("/users/login", function (req, res) {
         if (results.length != 0) {
           const comparison = await bcrypt.compare(password, results[0].password)
           if (comparison) {
-            res.send({ success: "login successful", email })
+            const token = jwt.sign({email: email}, JWT_SECRET ,{
+              expiresIn:'1h',
+            })
+            res.send({ success: "login successful", token ,email ,type , id})
           } else {
             res.send({ error: "Email and password does not match" })
           }
@@ -255,6 +260,20 @@ app.post("/users/login", function (req, res) {
     }
   )
 })
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(403).json({ error: 'Token is required' });
+  }
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
 app.post("/addEvent", function (req, res) {
   const { userID, eventName, eventDate, eventTime, picture } = req.body
 
