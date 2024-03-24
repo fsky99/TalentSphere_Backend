@@ -5,13 +5,13 @@ var mysql = require("mysql")
 var bcrypt = require("bcrypt")
 
 var bodyParser = require("body-parser")
-app.use(cors({ origin: "http://localhost:3306" }))
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({
     extended: true,
   })
 )
+app.use(cors({ origin: "http://localhost:4200" }))
 
 // default route
 app.get("/", function (req, res) {
@@ -27,6 +27,10 @@ var dbConn = mysql.createConnection({
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*")
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+  )
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
@@ -200,7 +204,7 @@ app.post("/addUser", function (req, res) {
         lname,
         username,
         email,
-        password: password,
+        password: hashedPassword,
         type,
         dob,
         phoneno,
@@ -222,33 +226,35 @@ app.post("/addUser", function (req, res) {
           message: "New user has been created successfully.",
         })
       }
-    )}
+    )
+  })
+})
+app.post("/users/login", function (req, res) {
+  var { email, password } = req.body
+  dbConn.query(
+    "SELECT * FROM users WHERE email = ? ",
+    [email],
+    async function (error, results, fields) {
+      if (error) {
+        res.send({
+          failed: "error",
+          error: error,
+        })
+      } else {
+        if (results.length != 0) {
+          const comparison = await bcrypt.compare(password, results[0].password)
+          if (comparison) {
+            res.send({ success: "login successful", email })
+          } else {
+            res.send({ error: "Email and password does not match" })
+          }
+        } else {
+          res.send({ error: "Email does not exist" })
+        }
+      }
+    }
   )
 })
-app.post ('/users/login', function(req,res){
-  var {email, password}= req.body
-  dbConn.query('SELECT * FROM users WHERE email = ? ' , [email], async function(error, result , fields){
-    if (error){
-      res.send({
-        failed : "error",
-        error : error
-      })
-    }else{
-      if (results.length != 0) {
-        const comparison = await bcrypt.compare(password, results[0].password);
-        if (comparison) {
-              res.send({ success: "login successful" });
-        } else {
-              res.send({ error: "Email and password does not match" });
-        }
-  }
-  else {
-        res.send({ error: "Email does not exist" });
-  }
-    }
-  })
-
-}) 
 app.post("/addEvent", function (req, res) {
   const { userID, eventName, eventDate, eventTime, picture } = req.body
 
@@ -462,12 +468,10 @@ app.post("/addEmployeeLeave", function (req, res) {
   const { userID, date, status } = req.body
 
   if (!userID || !date || !status) {
-    return res
-      .status(400)
-      .send({
-        error: true,
-        message: "Please provide all required empleave details",
-      })
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required empleave details",
+    })
   }
 
   dbConn.query(
@@ -475,12 +479,10 @@ app.post("/addEmployeeLeave", function (req, res) {
     [userID, date, status],
     function (error, results, fields) {
       if (error) {
-        return res
-          .status(500)
-          .send({
-            error: true,
-            message: "Error inserting empleave into database",
-          })
+        return res.status(500).send({
+          error: true,
+          message: "Error inserting empleave into database",
+        })
       }
       return res.send({
         error: false,
@@ -495,12 +497,10 @@ app.post("/addAnonymousMessage", function (req, res) {
   const { RecieveID, title, message, attachments } = req.body
 
   if (!RecieveID || !title || !message) {
-    return res
-      .status(400)
-      .send({
-        error: true,
-        message: "Please provide all required anonymousMessages details",
-      })
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required anonymousMessages details",
+    })
   }
 
   dbConn.query(
@@ -508,12 +508,10 @@ app.post("/addAnonymousMessage", function (req, res) {
     [RecieveID, title, message, attachments],
     function (error, results, fields) {
       if (error) {
-        return res
-          .status(500)
-          .send({
-            error: true,
-            message: "Error inserting anonymousMessages into database",
-          })
+        return res.status(500).send({
+          error: true,
+          message: "Error inserting anonymousMessages into database",
+        })
       }
       return res.send({
         error: false,
@@ -524,223 +522,277 @@ app.post("/addAnonymousMessage", function (req, res) {
   )
 })
 app.post("/addDirectMessage", function (req, res) {
-      const { senderID, RecieveID, title, message, attachments } = req.body;
-    
-      if (!senderID || !RecieveID || !title || !message) {
-        return res.status(400).send({ error: true, message: "Please provide all required DirectMessages details" });
-      }
-    
-      dbConn.query(
-        "INSERT INTO DirectMessages (senderID, RecieveID, title, message, attachments) VALUES (?, ?, ?, ?, ?)",
-        [senderID, RecieveID, title, message, attachments],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({ error: true, message: "Error inserting DirectMessages into database" });
-          }
-          return res.send({
-            error: false,
-            data: results,
-            message: "New DirectMessages record has been created successfully.",
-          });
-        }
-      );
-    });
+  const { senderID, RecieveID, title, message, attachments } = req.body
 
+  if (!senderID || !RecieveID || !title || !message) {
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required DirectMessages details",
+    })
+  }
+
+  dbConn.query(
+    "INSERT INTO DirectMessages (senderID, RecieveID, title, message, attachments) VALUES (?, ?, ?, ?, ?)",
+    [senderID, RecieveID, title, message, attachments],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
+          error: true,
+          message: "Error inserting DirectMessages into database",
+        })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "New DirectMessages record has been created successfully.",
+      })
+    }
+  )
+})
 
 // update request
 
 app.put("/updateUser", function (req, res) {
-      const {
-            id,
-            fname,
-            lname,
-            username,
-            email,
-            password,
-            type,
-            dob,
-            phoneno,
-            country,
-            address,
-            gender,
-            picture,
-          } = req.body
-      
-    
-      if (!id) {
-        return res.status(400).send({ error: true, message: "Please provide user ID" });
-      }
-    
-      dbConn.query(
-        "UPDATE users SET fname = ?, lname = ?, username = ?, email = ?, password = ?, type = ?, dob = ?, phoneno = ?, country = ?, address = ?, gender = ?, picture = ? WHERE id = ?",
-        [fname, lname, username, email, password, type, dob, phoneno, country, address, gender, picture, id],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({ error: true, message: "Error updating user in the database" });
-          }
-          return res.send({ error: false, data: results, message: "User has been updated successfully." });
-        }
-      );
-    });
-    
+  const {
+    id,
+    fname,
+    lname,
+    username,
+    email,
+    password,
+    type,
+    dob,
+    phoneno,
+    country,
+    address,
+    gender,
+    picture,
+  } = req.body
 
-    app.put("/updateSalary", function (req, res) {
-      const {
-            id,
-            userID,
-            salary
-          } = req.body
-      
-    
-      if (!id) {
-        return res.status(400).send({ error: true, message: "Please provide user ID" });
-      }
-    
-      dbConn.query(
-        "UPDATE salary SET salary = ? WHERE userID = ?",
-        [salary,userID],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({ error: true, message: "Error updating user salary in the database" });
-          }
-          return res.send({ error: false, data: results, message: "User salary has been updated successfully." });
-        }
-      );
-    });
-    
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide user ID" })
+  }
 
-    app.put("/updateEmployee", function (req, res) {
-      const {
-            id,
-            userID,
-            emprank,
-            reports_to,
-            job_id ,
-            department,
-            account_no
-          } = req.body
-      
-    
-      if (!id) {
-        return res.status(400).send({ error: true, message: "Please provide user ID" });
+  dbConn.query(
+    "UPDATE users SET fname = ?, lname = ?, username = ?, email = ?, password = ?, type = ?, dob = ?, phoneno = ?, country = ?, address = ?, gender = ?, picture = ? WHERE id = ?",
+    [
+      fname,
+      lname,
+      username,
+      email,
+      password,
+      type,
+      dob,
+      phoneno,
+      country,
+      address,
+      gender,
+      picture,
+      id,
+    ],
+    function (error, results, fields) {
+      if (error) {
+        return res
+          .status(500)
+          .send({ error: true, message: "Error updating user in the database" })
       }
-    
-      dbConn.query(
-        "UPDATE employee SET emprank = ? , reports_to = ? , job_id = ? ,department = ? , account_no = ? WHERE userID = ?",
-        [emprank ,reports_to, job_id ,department , account_no,userID],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({ error: true, message: "Error updating user salary in the database" });
-          }
-          return res.send({ error: false, data: results, message: "User salary has been updated successfully." });
-        }
-      );
-    });
+      return res.send({
+        error: false,
+        data: results,
+        message: "User has been updated successfully.",
+      })
+    }
+  )
+})
 
+app.put("/updateSalary", function (req, res) {
+  const { id, userID, salary } = req.body
+
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide user ID" })
+  }
+
+  dbConn.query(
+    "UPDATE salary SET salary = ? WHERE userID = ?",
+    [salary, userID],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
+          error: true,
+          message: "Error updating user salary in the database",
+        })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "User salary has been updated successfully.",
+      })
+    }
+  )
+})
+
+app.put("/updateEmployee", function (req, res) {
+  const { id, userID, emprank, reports_to, job_id, department, account_no } =
+    req.body
+
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide user ID" })
+  }
+
+  dbConn.query(
+    "UPDATE employee SET emprank = ? , reports_to = ? , job_id = ? ,department = ? , account_no = ? WHERE userID = ?",
+    [emprank, reports_to, job_id, department, account_no, userID],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
+          error: true,
+          message: "Error updating user salary in the database",
+        })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "User salary has been updated successfully.",
+      })
+    }
+  )
+})
 
 app.put("/updateTimeSheet", function (req, res) {
-      const userID = req.body.userID;
-      const checkinTime = req.body.checkinTime;
-      const checkoutTime = req.body.checkoutTime;
-      const projectName = req.body.projectName;
-      const taskName = req.body.taskName;
-      const status = req.body.status;
-    
-      if (!userID || !checkinTime || !checkoutTime || !projectName || !taskName || !status) {
-        return res.status(400).send({
+  const userID = req.body.userID
+  const checkinTime = req.body.checkinTime
+  const checkoutTime = req.body.checkoutTime
+  const projectName = req.body.projectName
+  const taskName = req.body.taskName
+  const status = req.body.status
+
+  if (
+    !userID ||
+    !checkinTime ||
+    !checkoutTime ||
+    !projectName ||
+    !taskName ||
+    !status
+  ) {
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required timeSheet details",
+    })
+  }
+
+  dbConn.query(
+    "UPDATE timeSheet SET checkinTime = ?, checkoutTime = ?, projectName = ?, taskName = ?, status = ? WHERE userID = ?",
+    [checkinTime, checkoutTime, projectName, taskName, status, userID],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
           error: true,
-          message: "Please provide all required timeSheet details"
-        });
+          message: "Error updating timeSheet in the database",
+        })
       }
-    
-      dbConn.query(
-        "UPDATE timeSheet SET checkinTime = ?, checkoutTime = ?, projectName = ?, taskName = ?, status = ? WHERE userID = ?",
-        [checkinTime, checkoutTime, projectName, taskName, status, userID],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({
-              error: true,
-              message: "Error updating timeSheet in the database"
-            });
-          }
-          return res.send({
-            error: false,
-            data: results,
-            message: "timeSheet record has been updated successfully."
-          });
-        }
-      );
-    });
-    
-    app.put("/updateEmployeeJobInfo", function (req, res) {
-      const userID = req.body.userID;
-      const jobName = req.body.jobName;
-      const joiningDate = req.body.joiningDate;
-      const cv = req.body.cv;
-      const passport = req.body.passport;
-      const healthCheck = req.body.healthCheck;
-      const visa = req.body.visa;
-      const jobContract = req.body.jobContract;
-      const reportsTo = req.body.reportsTo;
-    
-      if (!userID || !jobName || !joiningDate || !cv || !passport || !healthCheck || !visa || !jobContract || !reportsTo) {
-        return res.status(400).send({
+      return res.send({
+        error: false,
+        data: results,
+        message: "timeSheet record has been updated successfully.",
+      })
+    }
+  )
+})
+
+app.put("/updateEmployeeJobInfo", function (req, res) {
+  const userID = req.body.userID
+  const jobName = req.body.jobName
+  const joiningDate = req.body.joiningDate
+  const cv = req.body.cv
+  const passport = req.body.passport
+  const healthCheck = req.body.healthCheck
+  const visa = req.body.visa
+  const jobContract = req.body.jobContract
+  const reportsTo = req.body.reportsTo
+
+  if (
+    !userID ||
+    !jobName ||
+    !joiningDate ||
+    !cv ||
+    !passport ||
+    !healthCheck ||
+    !visa ||
+    !jobContract ||
+    !reportsTo
+  ) {
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required employeejobinfo details",
+    })
+  }
+
+  dbConn.query(
+    "UPDATE employeejobinfo SET jobName = ?, joiningDate = ?, cv = ?, passport = ?, healthCheck = ?, visa = ?, jobContract = ?, reportsTo = ? WHERE userID = ?",
+    [
+      jobName,
+      joiningDate,
+      cv,
+      passport,
+      healthCheck,
+      visa,
+      jobContract,
+      reportsTo,
+      userID,
+    ],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
           error: true,
-          message: "Please provide all required employeejobinfo details"
-        });
+          message: "Error updating employeejobinfo in the database",
+        })
       }
-    
-      dbConn.query(
-        "UPDATE employeejobinfo SET jobName = ?, joiningDate = ?, cv = ?, passport = ?, healthCheck = ?, visa = ?, jobContract = ?, reportsTo = ? WHERE userID = ?",
-        [jobName, joiningDate, cv, passport, healthCheck, visa, jobContract, reportsTo, userID],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({
-              error: true,
-              message: "Error updating employeejobinfo in the database"
-            });
-          }
-          return res.send({
-            error: false,
-            data: results,
-            message: "employeejobinfo record has been updated successfully."
-          });
-        }
-      );
-    });
-    
-    app.put("/updateEmpleave", function (req, res) {
-      const userID = req.body.userID;
-      const date = req.body.date;
-      const status = req.body.status;
-    
-      if (!userID || !date || !status) {
-        return res.status(400).send({
+      return res.send({
+        error: false,
+        data: results,
+        message: "employeejobinfo record has been updated successfully.",
+      })
+    }
+  )
+})
+
+app.put("/updateEmpleave", function (req, res) {
+  const userID = req.body.userID
+  const date = req.body.date
+  const status = req.body.status
+
+  if (!userID || !date || !status) {
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required empleave details",
+    })
+  }
+
+  dbConn.query(
+    "UPDATE empleave SET date = ?, status = ? WHERE userID = ?",
+    [date, status, userID],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
           error: true,
-          message: "Please provide all required empleave details"
-        });
+          message: "Error updating empleave in the database",
+        })
       }
-    
-      dbConn.query(
-        "UPDATE empleave SET date = ?, status = ? WHERE userID = ?",
-        [date, status, userID],
-        function (error, results, fields) {
-          if (error) {
-            return res.status(500).send({
-              error: true,
-              message: "Error updating empleave in the database"
-            });
-          }
-          return res.send({
-            error: false,
-            data: results,
-            message: "empleave record has been updated successfully."
-          });
-        }
-      );
-    });
-    
-    
+      return res.send({
+        error: false,
+        data: results,
+        message: "empleave record has been updated successfully.",
+      })
+    }
+  )
+})
+
 // delete request
 app.delete("/deleteUser/:id", function (req, res) {
   let id = req.params.id
