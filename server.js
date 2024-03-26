@@ -152,6 +152,26 @@ app.get("/users/:id", verifyToken,function (req, res) {
     }
   )
 })
+app.get("/users/:email", verifyToken,function (req, res) {
+  let email = req.params.email
+  if (!email) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide email" })
+  }
+  dbConn.query(
+    "SELECT * FROM users where email=?",
+    email,
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results[0],
+        message: "users list.",
+      })
+    }
+  )
+})
 app.get("/employee/:userID", verifyToken,function (req, res) {
   let userID = req.params.userID
   if (!userID) {
@@ -174,7 +194,8 @@ app.get("/employee/:userID", verifyToken,function (req, res) {
 })
 
 // insert req
-app.post("/addUser", verifyToken,function (req, res) {
+// insert req
+app.post("/addUser", verifyToken, function (req, res) {
   const {
     id,
     fname,
@@ -189,33 +210,18 @@ app.post("/addUser", verifyToken,function (req, res) {
     address,
     gender,
     picture,
-  } = req.body
+  } = req.body;
 
-  if (
-    !id ||
-    !fname ||
-    !lname ||
-    !username ||
-    !email ||
-    !password ||
-    !type ||
-    !dob ||
-    !phoneno ||
-    !country ||
-    !address ||
-    !gender
-  ) {
+  if (!email) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required user details",
-    })
+    });
   }
 
   bcrypt.hash(password, 10, function (err, hashedPassword) {
     if (err) {
-      return res
-        .status(500)
-        .send({ error: true, message: "Error hashing password" })
+      return res.status(500).send({ error: true, message: "Error hashing password" });
     }
 
     dbConn.query(
@@ -240,17 +246,21 @@ app.post("/addUser", verifyToken,function (req, res) {
           return res.status(500).send({
             error: true,
             message: "Error inserting user into database",
-          })
+          });
         }
+        
+        const insertedUserId = results.insertId; // Get the ID of the newly inserted user
+
         return res.send({
           error: false,
-          data: results,
+          data: { id: insertedUserId }, // Send the inserted user ID in the response
           message: "New user has been created successfully.",
-        })
+        });
       }
-    )
-  })
-})
+    );
+  });
+});
+
 app.post("/users/login",function (req, res) {
   var { email, password  } = req.body
   dbConn.query(
@@ -285,7 +295,7 @@ app.post("/users/login",function (req, res) {
 app.post("/addEvent", verifyToken,function (req, res) {
   const { userID, eventName, eventDate, eventTime, picture } = req.body
 
-  if (!userID || !eventName || !eventDate || !eventTime) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required event details",
@@ -313,7 +323,7 @@ app.post("/addEvent", verifyToken,function (req, res) {
 app.post("/addSalary", verifyToken,function (req, res) {
   const { userID, salary } = req.body
 
-  if (!userID || !salary) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required salary details",
@@ -342,7 +352,7 @@ app.post("/addSalary", verifyToken,function (req, res) {
 app.post("/addBonus",verifyToken, function (req, res) {
   const { userID, salaryID, bonus, bonusDate } = req.body
 
-  if (!userID || !salaryID || !bonus || !bonusDate) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required bonus details",
@@ -370,7 +380,7 @@ app.post("/addEmployee",verifyToken, function (req, res) {
   const { userID, emprank, reports_to, job_id, department, account_no } =
     req.body
 
-  if (!userID || !emprank || !job_id || !department) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required employee details",
@@ -442,17 +452,7 @@ app.post("/addEmployeeJobInfo", verifyToken,function (req, res) {
     reportsTo,
   } = req.body
 
-  if (
-    !userID ||
-    !jobName ||
-    !joiningDate ||
-    !cv ||
-    !passport ||
-    !healthCheck ||
-    !visa ||
-    !jobContract ||
-    !reportsTo
-  ) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required employeejobinfo details",
@@ -479,9 +479,12 @@ app.post("/addEmployeeJobInfo", verifyToken,function (req, res) {
           message: "Error inserting employeejobinfo into database",
         })
       }
+      
+      const insertedId = results.insertId; // Get the ID of the inserted record
+      
       return res.send({
         error: false,
-        data: results,
+        data: { id: insertedId }, // Send the ID back in the response
         message: "New employeejobinfo record has been created successfully.",
       })
     }
@@ -490,7 +493,7 @@ app.post("/addEmployeeJobInfo", verifyToken,function (req, res) {
 app.post("/addEmployeeLeave", verifyToken,function (req, res) {
   const { userID, date, status } = req.body
 
-  if (!userID || !date || !status) {
+  if (!userID ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required empleave details",
