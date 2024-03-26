@@ -92,6 +92,26 @@ app.get("/timeSheet", verifyToken,function (req, res) {
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
+app.get("/timeSheet/:userID", verifyToken,function (req, res) {
+  let userID = req.params.userID
+  if (!userID) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide userID" })
+  }
+  dbConn.query(
+    "SELECT * FROM timeSheet where userID=?",
+    userID,
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results[0],
+        message: "users list.",
+      })
+    }
+  )
+})
 
 app.get("/bonus", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM bonus", function (error, results, fields) {
@@ -381,12 +401,8 @@ app.post("/addTimeSheet", verifyToken,function (req, res) {
     req.body
 
   if (
-    !userID ||
-    !checkinTime ||
-    !checkoutTime ||
-    !projectName ||
-    !taskName ||
-    !status
+    !userID 
+    
   ) {
     return res.status(400).send({
       error: true,
@@ -770,11 +786,10 @@ app.put("/updateEmployeeJobInfo", verifyToken,function (req, res) {
 })
 
 app.put("/updateEmpleave", verifyToken,function (req, res) {
-  const userID = req.body.userID
-  const date = req.body.date
+  const id = req.body.id
   const status = req.body.status
 
-  if (!userID || !date || !status) {
+  if (!id ) {
     return res.status(400).send({
       error: true,
       message: "Please provide all required empleave details",
@@ -782,8 +797,8 @@ app.put("/updateEmpleave", verifyToken,function (req, res) {
   }
 
   dbConn.query(
-    "UPDATE empleave SET date = ?, status = ? WHERE userID = ?",
-    [date, status, userID],
+    "UPDATE empleave SET status = ? WHERE id = ?",
+    [ status, id],
     function (error, results, fields) {
       if (error) {
         return res.status(500).send({
