@@ -733,8 +733,10 @@ app.put("/updateTimeSheet",verifyToken, function (req, res) {
 
 
 
-app.put("/updateStatusofTS/:id", function (req, res) {
+app.put("/updateStatusofTS/:id/:time", function (req, res) {
   const id = req.params.id
+  const checkoutTime = req.params.time
+
  
   if (
     !id
@@ -746,8 +748,8 @@ app.put("/updateStatusofTS/:id", function (req, res) {
   }
 
   dbConn.query(
-    "UPDATE timeSheet SET checkoutTime = NOW(),  status = ? WHERE userID = ?",
-    ['C',id],
+    "UPDATE timeSheet SET checkoutTime = ?,  status = ? WHERE id = ?",
+    [checkoutTime,'C',id],
     function (error, results, fields) {
       if (error) {
         return res.status(500).send({
