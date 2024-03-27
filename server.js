@@ -731,6 +731,40 @@ app.put("/updateTimeSheet",verifyToken, function (req, res) {
   )
 })
 
+
+
+app.put("/updateStatusofTS/:id", function (req, res) {
+  const id = req.params.id
+ 
+  if (
+    !id
+  ) {
+    return res.status(400).send({
+      error: true,
+      message: "Please provide all required timeSheet details",
+    })
+  }
+
+  dbConn.query(
+    "UPDATE timeSheet SET checkoutTime = NOW(),  status = ? WHERE userID = ?",
+    ['C',id],
+    function (error, results, fields) {
+      if (error) {
+        return res.status(500).send({
+          error: true,
+          message: "Error updating timeSheet in the database",
+        })
+      }
+      return res.send({
+        error: false,
+        data: results,
+        message: "timeSheet record has been updated successfully.",
+      })
+    }
+  )
+})
+
+
 app.put("/updateEmployeeJobInfo", verifyToken,function (req, res) {
   const userID = req.body.userID
   const jobName = req.body.jobName
