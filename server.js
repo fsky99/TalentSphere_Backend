@@ -126,6 +126,14 @@ app.get("/salary", verifyToken,function (req, res) {
     return res.send({ error: false, data: results, message: "users list." })
   })
 })
+
+app.get("/salary/:userID", verifyToken,function (req, res) {
+  let userID = req.params.userID
+  dbConn.query("SELECT * FROM salary WHERE userID = ?",[userID], function (error, results, fields) {
+    if (error) throw error
+    return res.send({ error: false, data: results, message: "users list." })
+  })
+})
 app.get("/eventss", verifyToken,function (req, res) {
   dbConn.query("SELECT * FROM eventss", function (error, results, fields) {
     if (error) throw error
@@ -264,7 +272,7 @@ app.post("/addUser", verifyToken, function (req, res) {
 app.post("/users/login",function (req, res) {
   var { email, password  } = req.body
   dbConn.query(
-    "SELECT id, type, password FROM users WHERE email = ? ",
+    "SELECT id, type, password ,fname ,lname FROM users WHERE email = ? ",
     [email],
     async function (error, results, fields) {
       if (error) {
@@ -274,13 +282,13 @@ app.post("/users/login",function (req, res) {
         })
       } else {
         if (results.length != 0) {
-          const {id , type} = results[0]
+          const {id , type , fname ,lname} = results[0]
           const comparison = await bcrypt.compare(password, results[0].password)
           if (comparison) {
             const token = jwt.sign({email: email}, JWT_SECRET ,{
               expiresIn:'1h',
             })
-            res.send({ success: "login successful", token ,email ,type , id})
+            res.send({ success: "login successful", token ,email ,type , id ,fname ,lname})
           } else {
             res.send({ error: "Email and password does not match" })
           }
@@ -865,6 +873,28 @@ app.delete("/deleteUser/:id", verifyToken,function (req, res) {
   }
   dbConn.query(
     "DELETE FROM users WHERE id = ?",
+    [id],
+    function (error, results, fields) {
+      if (error) throw error
+      return res.send({
+        error: false,
+        data: results,
+        message: "User has been updated successfully.",
+      })
+    }
+  )
+})
+
+app.delete("/deleteEvent/:id", verifyToken,function (req, res) {
+  let id = req.params.id
+
+  if (!id) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Please provide user_id" })
+  }
+  dbConn.query(
+    "DELETE FROM eventss WHERE id = ?",
     [id],
     function (error, results, fields) {
       if (error) throw error
