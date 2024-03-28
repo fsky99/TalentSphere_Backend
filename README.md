@@ -13,7 +13,7 @@
 
 ## Live Version (UNDER DEVELOPMENT)
 
-Click the following link to be redirected to the live version of the code. [name of project](link of project)
+Click the following link to be redirected to the live version of the code. [Talent Sphere](link of project)
 
 ## About the Project
 
@@ -43,6 +43,8 @@ TalentSphere is a comprehensive HR Management System web application designed to
 - **Delete:** Remove employee accounts and events from the system
 
 ## Screenshots:
+## Login Page ![Login Page](login.png)
+## My Activity Page ![My ACtivity Page](myActivity.png)
 
 
 
@@ -51,6 +53,7 @@ TalentSphere is a comprehensive HR Management System web application designed to
 - [Link to Diagram] (https://lucid.app/lucidchart/3557353f-8d1e-4038-8495-074e3cc97969/edit?viewport_loc=-4688%2C-298%2C2528%2C1282%2C0_0&invitationId=inv_2abaf856-b787-402b-a848-e779cfb82900)
 
 ### wireframe:
+## Wireframe ![Home Page](Home.png)
 
 ### Real website:
 
