@@ -71,14 +71,32 @@ TalentSphere is a comprehensive HR Management System web application designed to
 ### function
 
 ```
- Under Deveopment
+combineData() {
+   
+   if (this.usersData.length > 0 && this.leaves.length > 0 && this.employeeJobInfo.length > 0) {
+ 
+     this.combinedData = [];
+     this.usersData.forEach((user: any) => {
+      
+       const emplJIfo = this.employeeJobInfo.find((job: any) => job.userID === user.id);
+       const leaves = this.leaves.filter((leave:any)=>leave.userID === user.id)
+       const activity = this.activities.filter((act:any)=>act.userID === user.id)
+       if(leaves && leaves.length >0){
+         this.combinedData.push({ ...user, emplJIfo ,activity,leaves });
+       }
+     });
+
+     console.log(this.combinedData);
+   }
 ```
 
 ---
 
 ### Future plans:
 
-- [ Under Deveopment ]
+- [] Include a message system where users can message HR Admin both with their name and anonymously.
+- [] Introduce a mobile application.
+- [] Import a charts for the Admin HR to view. 
 
 ---
 
