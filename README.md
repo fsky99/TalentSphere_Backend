@@ -11,7 +11,7 @@
 - [Frontend](https://github.com/fsky99/project4_Frontend)
 - [Backend](https://github.com/fsky99/project4_Backend)
 
-## Live Version (UNDER DEVELOPMENT)
+## Live Version:
 
 Click the following link to be redirected to the live version of the code. [Talent Sphere](link of project)
 
@@ -50,9 +50,6 @@ TalentSphere is a comprehensive HR Management System web application designed to
 
 
 
-### Hierarchy Diagram:
-
-- [Link to Diagram] (https://lucid.app/lucidchart/3557353f-8d1e-4038-8495-074e3cc97969/edit?viewport_loc=-4688%2C-298%2C2528%2C1282%2C0_0&invitationId=inv_2abaf856-b787-402b-a848-e779cfb82900)
 
 ### wireframe:
 ## Wireframe ![Home Page](Home.png)
@@ -64,7 +61,7 @@ TalentSphere is a comprehensive HR Management System web application designed to
 - [x] VSCode (Editor for Writing the Code)
 - [x] Node Js (Backend)
 - [x] Express (API Calls)
-- [x] postgresql (Databse)
+- [x] MySQL Workbench (Databse)
 - [x] Angular TS (Frontend)
 - [x] Trelllo (Managment for the work)
 - [x] lucidchart (ERD for the database)
