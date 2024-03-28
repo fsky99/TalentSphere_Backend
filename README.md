@@ -45,6 +45,8 @@ TalentSphere is a comprehensive HR Management System web application designed to
 ## Screenshots:
 ## Login Page ![Login Page](login.png)
 ## My Activity Page ![My ACtivity Page](myActivity.png)
+## Employee Remmuniration Page ![Emp Page](emplooyeeRemmuniration.png)
+## Add Employee  Page ![Add emp Page](addEmp.png)
 
 
 
